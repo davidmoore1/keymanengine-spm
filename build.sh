@@ -4,7 +4,7 @@
 #
 #  Created by David Yaho on 3/26/25.
 #
-KEYMAN_ENGINE_TAG="v0.0.1"
+KEYMAN_ENGINE_TAG="min.v0.0.2"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
 
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
@@ -29,6 +29,9 @@ cd ios/
 ./build.sh build:engine --debug
 
 echo "Updating package file..."
+cd ../../..
+pwd
+ls
 PACKAGE_STRING=""
 sed -i '' -e "s/let release =.*/let release = \"$KEYMAN_ENGINE_TAG\"/" Package.swift
 
@@ -49,3 +52,26 @@ done
 PACKAGE_STRING=$(basename "$PACKAGE_STRING" ", ")
 sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.swift
 
+echo "Committing Changes..."
+git add -u
+git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
+
+echo "Creating Tag..."
+git tag $KEYMAN_ENGINE_TAG
+git push
+git push origin --tags
+
+echo "Creating Release..."
+gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
+
+echo "Uploading Binaries..."
+for f in $(ls "$XCFRAMEWORK_DIR")
+do
+    if [[ $f == *.zip ]]; then
+        gh release upload $KEYMAN_ENGINE_TAG "$XCFRAMEWORK_DIR/$f"
+    fi
+done
+
+gh release edit $KEYMAN_ENGINE_TAG --draft=false
+
+echo "All done!"
