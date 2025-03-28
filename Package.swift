@@ -8,7 +8,6 @@ let frameworks = ["DeviceKit": "9c656fe2257b8dd1be2e857ea698fedc39f283f5662127f7
 
 func xcframework(_ package: Dictionary<String, String>.Element) -> Target {
     let url = "https://github.com/davidmoore1/keymanengine-spm/releases/download/\(release)/\(package.key).xcframework.zip"
-    print("Downloading from URL: \(url)") // Debugging line
     return .binaryTarget(name: package.key, url: url, checksum: package.value)
 }
 
