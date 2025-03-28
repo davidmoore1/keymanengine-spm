@@ -2,7 +2,7 @@
 #  build.sh
 #  keymanengine-spm
 #
-#  Created by David Yaho on 3/26/25.
+#  Created by David Moore on 3/26/25.
 #
 KEYMAN_ENGINE_TAG="min.v0.0.2"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
