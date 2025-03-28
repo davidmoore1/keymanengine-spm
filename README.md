@@ -17,9 +17,9 @@ If using this in a swift package, add this repo as a dependency.
 
 ### Usage
 
-To get started, import this library: `import KeymanEngine` \
+To get started, import this library: `import KeymanEngine` 
 
-See the [Keyman iOS](https://github.com/keymanapp/keyman/tree/master/ios) for more info on integration of KeymanEngine. \
+See the [Keyman iOS](https://github.com/keymanapp/keyman/tree/master/ios) for more info on integration of KeymanEngine. 
 
 ### Building
 If you would like to build your own xcframework binaries run the `build.sh` script on a macOS machine. 
