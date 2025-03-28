@@ -5,7 +5,7 @@ It distributes and bundles the Keyman Engine xcframework version for iOS.  It al
 depends on and builds with Carthage during its build process. 
 
 ### Installation
-Add this repo to as a Swift Package dependency to your project
+Add this repo as a Swift Package dependency to your project
 ```
 https://github.com/davidmoore1/keymanengine-spm
 ```
