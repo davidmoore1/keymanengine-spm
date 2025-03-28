@@ -4,7 +4,7 @@
 #
 #  Created by David Moore on 3/26/25.
 #
-KEYMAN_ENGINE_TAG="min.v0.0.4"
+KEYMAN_ENGINE_TAG="min.v0.0.5"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
 
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"

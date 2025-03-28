@@ -3,11 +3,11 @@
 
 import PackageDescription
 
-let release = "min.v0.0.4"
-let frameworks = ["KeymanEngine": "3bcb90f2a90760e2022c9bc25dcc1910a5b4c11fcb4338a76583bf03bde5a2a1"]
+let release = "min.v0.0.5"
+let frameworks = ["KeymanEngine": "6a99990155d201821b007e65f506932e967ea7ef8a4693a3e803c473ded527e2"]
 
 func xcframework(_ package: Dictionary<String, String>.Element) -> Target {
-    let url = "https://github.com/davidmoore1/keyengine-spm/releases/download/\(release)/\(package.key).xcframework.zip"
+    let url = "https://github.com/davidmoore1/keymanengine-spm/releases/download/\(release)/\(package.key).xcframework.zip"
     return .binaryTarget(name: package.key, url: url, checksum: package.value)
 }
 
