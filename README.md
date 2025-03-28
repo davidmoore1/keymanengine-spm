@@ -1,0 +1,28 @@
+# Keyman Engine SPM
+
+This is a Swift Package Manager compatible version of the iOS Keyman Engine component of [Keyman](https://github.com/keymanapp/keyman). 
+It distributes and bundles the Keyman Engine xcframework version for iOS.  It also distributes the xcframeworks that Keyman Engine
+depends on and builds with Carthage during its build process. 
+
+### Installation
+Add this repo to as a Swift Package dependency to your project
+```
+https://github.com/davidmoore1/keymanengine-spm
+```
+
+If using this in a swift package, add this repo as a dependency.
+```
+.package(url: "https://github.com/davidmoore1/keymanengine-spm/", .upToNextMajor(from: "0.1.0"))
+```
+
+### Usage
+
+To get started, import this library: `import KeymanEngine` \
+
+See the [Keyman iOS](https://github.com/keymanapp/keyman/tree/master/ios) for more info on integration of KeymanEngine. \
+
+### Building
+If you would like to build your own xcframework binaries run the `build.sh` script on a macOS machine. 
+Edit the KEYMAN_ENGINE_TAG in the build.sh script.  It will perform the build and update the Package.swift file with the new version number.
+The KEYMAN_ENGINE_REPO variable in the build.sh script is the URL to the Keyman Engine repo being built.
+The KEYMAN_ENGINE_CHECKOUT variable in the build.sh script is the branch or tag being checked out.
