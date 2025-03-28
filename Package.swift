@@ -4,7 +4,7 @@
 import PackageDescription
 
 let release = "min.v0.0.2"
-let frameworks = ["KeymanEngine": "88eae99bebb0178e6faf0076a1087a4a0377c2eacf4204deef2a4d864699b3e5"]
+let frameworks = ["KeymanEngine": "2541993d7bd007ce0b1cba445c5f3696b7e11f14cf2537accd93151a5e62b5fe"]
 
 func xcframework(_ package: Dictionary<String, String>.Element) -> Target {
     let url = "https://github.com/davidmoore1/keyengine-spm/releases/download/\(release)/\(package.key).xcframework.zip"
