@@ -4,7 +4,7 @@
 #
 #  Created by David Moore on 3/26/25.
 #
-KEYMAN_ENGINE_TAG="v0.1.0"
+KEYMAN_ENGINE_TAG="minv0.1.1"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
 
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
@@ -36,13 +36,21 @@ PACKAGE_STRING=""
 sed -i '' -e "s/let release =.*/let release = \"$KEYMAN_ENGINE_TAG\"/" Package.swift
 
 XCFRAMEWORK_DIR="$WORK_DIR/ios/build/Build/Products/Debug"
+XCDEST_DIR="$WORK_DIR/ios/build/Build/Products/SPM"
+XCCARTHAGE_DIR="$WORK_DIR/ios/Carthage/Build"
 
-rm -rf $XCFRAMEWORK_DIR/*.zip
+echo "Copying Frameworks to SPM Directory..."
+mkdir -p "$XCDEST_DIR"
+rm -rf "$XCDEST_DIR"/*
+cp -R "$XCCARTHAGE_DIR"/*.xcframework "$XCDEST_DIR"
+cp -R "$XCFRAMEWORK_DIR"/KeymanEngine.xcframework "$XCDEST_DIR"
 
-for f in $(ls "$XCFRAMEWORK_DIR")
+rm -rf $XCDEST_DIR/*.zip
+
+for f in $(ls "$XCDEST_DIR")
 do
     echo "Adding $f to package list..."
-    PACAKGE="$XCFRAMEWORK_DIR/$f"
+    PACAKGE="$XCDEST_DIR/$f"
     ditto -c -k --sequesterRsrc --keepParent $PACAKGE "$PACAKGE.zip"
     PACKAGE_NAME=$(basename "$f" .xcframework)
     PACKAGE_SUM=$(sha256sum "$PACAKGE.zip" | awk '{ print $1 }')
@@ -65,10 +73,10 @@ echo "Creating Release..."
 gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
 
 echo "Uploading Binaries..."
-for f in $(ls "$XCFRAMEWORK_DIR")
+for f in $(ls "$XCDEST_DIR")
 do
     if [[ $f == *.zip ]]; then
-        gh release upload $KEYMAN_ENGINE_TAG "$XCFRAMEWORK_DIR/$f"
+        gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
     fi
 done
 
