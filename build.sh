@@ -4,6 +4,8 @@
 #
 #  Created by David Moore on 3/26/25.
 #
+set -e
+
 KEYMAN_ENGINE_TAG="v0.1.1"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
 
@@ -17,6 +19,9 @@ if [[ ! -d $WORK_DIR ]]; then
   git clone $KEYMAN_ENGINE_REPO
   cd ../
 fi
+
+echo "Install build dependencies..."
+brew install gh
 
 echo "Checking out $KEYMAN_ENGINE_CHECKOUT..."
 cd $WORK_DIR
