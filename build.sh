@@ -6,6 +6,8 @@
 #
 set -e
 
+which -a bash
+
 KEYMAN_ENGINE_TAG="v0.1.2"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
 
