@@ -11,6 +11,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.2.0.app
+
       - name: Install Dependencies
         run: brew install bash jq meson coreutils pandoc pyenv
 
