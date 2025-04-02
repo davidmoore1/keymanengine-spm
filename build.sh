@@ -21,7 +21,7 @@ if [[ ! -d $WORK_DIR ]]; then
 fi
 
 echo "Install build dependencies..."
-brew install gh
+arch -arm64 brew install gh
 
 echo "Checking out $KEYMAN_ENGINE_CHECKOUT..."
 cd $WORK_DIR
