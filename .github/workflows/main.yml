@@ -21,8 +21,10 @@ jobs:
         run: chmod +x incrementBuildNumber.sh build.sh
 
       - name: Increment Build Number
+	shell: bash
         run: ./incrementBuildNumber.sh
 
       - name: Run Build Script
+	shell: bash
         run: ./build.sh
         
