@@ -1,13 +1,7 @@
 name: Build Workflow
 
 on:
-  push:
-    branches:
-      - main  # Adjust this if you want to trigger on other branches
-
-  pull_request:
-    branches:
-      - main  # Adjust this if needed
+  workflow_dispatch:  # This makes the workflow run only when manually triggered
 
 jobs:
   build:
