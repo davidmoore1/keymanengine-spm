@@ -6,13 +6,13 @@
 #
 set -e
 
-which -a bash
-
 KEYMAN_ENGINE_TAG="v0.1.2"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
 
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
 WORK_DIR=".tmp/keyman"
+
+mkdir -p ~/.nvm
 
 if [[ ! -d $WORK_DIR ]]; then
   echo "Cloning keyman repository..."
