@@ -20,9 +20,6 @@ if [[ ! -d $WORK_DIR ]]; then
   cd ../
 fi
 
-echo "Install build dependencies..."
-arch -arm64 brew install gh
-
 echo "Checking out $KEYMAN_ENGINE_CHECKOUT..."
 cd $WORK_DIR
 git fetch
