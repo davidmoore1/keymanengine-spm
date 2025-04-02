@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest  # Use macOS runner
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
@@ -21,10 +21,11 @@ jobs:
         run: chmod +x incrementBuildNumber.sh build.sh
 
       - name: Increment Build Number
-	shell: bash
+        shell: bash
         run: ./incrementBuildNumber.sh
 
       - name: Run Build Script
-	shell: bash
+        shell: bash
         run: ./build.sh
+
         
