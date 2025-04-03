@@ -13,6 +13,26 @@ KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
 WORK_DIR=".tmp/keyman"
 
 mkdir -p ~/.nvm
+export NVM_DIR="$HOME/.nvm"
+
+# Check if Homebrew-installed NVM exists, otherwise fallback to manually installed NVM
+if [ -s "$(brew --prefix)/opt/nvm/nvm.sh" ]; then
+    . "$(brew --prefix)/opt/nvm/nvm.sh"
+elif [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+else
+    echo "Error: nvm not found" >&2
+    exit 1
+fi
+
+# Load bash completion (optional)
+[ -s "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm" ] && \
+    . "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
+
+nvm install 18
+nvm use 18
+which node -a
+node -v  # Verify installation
 
 if [[ ! -d $WORK_DIR ]]; then
   echo "Cloning keyman repository..."
