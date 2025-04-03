@@ -31,8 +31,9 @@ fi
 
 nvm install 18
 nvm use 18
-which node -a
+echo "Before node -v"
 node -v  # Verify installation
+echo "After node -v"
 
 if [[ ! -d $WORK_DIR ]]; then
   echo "Cloning keyman repository..."
