@@ -3,6 +3,9 @@ name: Build Workflow
 on:
   workflow_dispatch:  # This makes the workflow run only when manually triggered
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest

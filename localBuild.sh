@@ -15,24 +15,6 @@ WORK_DIR=".tmp/keyman"
 mkdir -p ~/.nvm
 export NVM_DIR="$HOME/.nvm"
 
-# Check if Homebrew-installed NVM exists, otherwise fallback to manually installed NVM
-if [ -s "$(brew --prefix)/opt/nvm/nvm.sh" ]; then
-    . "$(brew --prefix)/opt/nvm/nvm.sh"
-elif [ -s "$NVM_DIR/nvm.sh" ]; then
-    . "$NVM_DIR/nvm.sh"
-else
-    echo "Error: nvm not found" >&2
-    exit 1
-fi
-
-# Load bash completion (optional)
-[ -s "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm" ] && \
-    . "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
-
-nvm install 18.17.0
-nvm use 18.17.0
-node -v  # Verify installation
-
 if [[ ! -d $WORK_DIR ]]; then
   echo "Cloning keyman repository..."
   mkdir .tmp/ || true
@@ -83,22 +65,16 @@ done
 PACKAGE_STRING=$(basename "$PACKAGE_STRING" ", ")
 sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.swift
 
-echo "Configuring Git..."
-git config --global user.email "github-actions[bot]@users.noreply.github.com"
-git config --global user.name "github-actions[bot]"
-git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/davidmoore1/keymanengine-spm.git
-
 echo "Committing Changes..."
 git add -u
 git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
 
 echo "Creating Tag..."
 git tag $KEYMAN_ENGINE_TAG
-git push origin main
+git push
 git push origin --tags
 
 echo "Creating Release..."
-export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
 gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
 
 echo "Uploading Binaries..."
