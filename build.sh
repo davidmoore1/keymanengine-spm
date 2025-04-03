@@ -86,12 +86,29 @@ sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.
 echo "Configuring Git..."
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 git config --global user.name "github-actions[bot]"
-git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/davidmoore1/keymanengine-spm.git
+git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/davidmoore1/keymanengine-spm.git
 
 echo "Committing Changes..."
 git add -u
 git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
 
-# Export variables needed by action to a file that GitHub Actions can read
-echo "KEYMAN_ENGINE_TAG=$KEYMAN_ENGINE_TAG" >> $GITHUB_ENV
-echo "XCDEST_DIR=$XCDEST_DIR" >> $GITHUB_ENV
+echo "Creating Tag..."
+git tag $KEYMAN_ENGINE_TAG
+git push origin main  # Ensure you're pushing to the correct branch
+git push origin --tags
+
+echo "Creating Release..."
+gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
+
+echo "Uploading Binaries..."
+for f in $(ls "$XCDEST_DIR")
+do
+    if [[ $f == *.zip ]]; then
+        gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
+    fi
+done
+
+gh release edit $KEYMAN_ENGINE_TAG --draft=false
+
+echo "All done!"
+

@@ -34,32 +34,7 @@ jobs:
 
       - name: Run Build Script
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./build.sh
 
-      - name: Verify Variables
-        run: |
-          echo "Keyman Engine Tag: $KEYMAN_ENGINE_TAG"
-          echo "XC Destination Directory: $XCDEST_DIR"
-
-      - name: Create and push tag
-        run: |
-          git tag $KEYMAN_ENGINE_TAG
-          git push origin --tags
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
-
-      - name: Upload binaries to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for f in $(ls "$XCDEST_DIR"); do
-            if [[ $f == *.zip ]]; then
-              gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
-            fi
-          done
-
-        
