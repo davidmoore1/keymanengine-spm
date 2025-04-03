@@ -8,8 +8,8 @@ set -e
 
 KEYMAN_ENGINE_TAG="v0.1.3"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
-
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
+NODE_VERSION="18.17.0"
 WORK_DIR=".tmp/keyman"
 
 mkdir -p ~/.nvm
@@ -29,8 +29,8 @@ fi
 [ -s "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm" ] && \
     . "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
 
-nvm install 18.17.0
-nvm use 18.17.0
+nvm install $NODE_VERSION
+nvm use $NODE_VERSION
 node -v  # Verify installation
 
 if [[ ! -d $WORK_DIR ]]; then
