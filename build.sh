@@ -92,23 +92,6 @@ echo "Committing Changes..."
 git add -u
 git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
 
-echo "Creating Tag..."
-git tag $KEYMAN_ENGINE_TAG
-git push origin main
-git push origin --tags
-
-echo "Creating Release..."
-export GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
-
-echo "Uploading Binaries..."
-for f in $(ls "$XCDEST_DIR")
-do
-    if [[ $f == *.zip ]]; then
-        gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
-    fi
-done
-
-gh release edit $KEYMAN_ENGINE_TAG --draft=false
-
-echo "All done!"
+# Export variables needed by action to a file that GitHub Actions can read
+echo "KEYMAN_ENGINE_TAG=$KEYMAN_ENGINE_TAG" >> $GITHUB_ENV
+echo "XCDEST_DIR=$XCDEST_DIR" >> $GITHUB_ENV
