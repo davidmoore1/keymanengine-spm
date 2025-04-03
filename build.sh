@@ -29,8 +29,8 @@ fi
 [ -s "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm" ] && \
     . "$(brew --prefix)/opt/nvm/etc/bash_completion.d/nvm"
 
-nvm install 18
-nvm use 18
+nvm install 18.17.0
+nvm use 18.17.0
 echo "Before node -v"
 node -v  # Verify installation
 echo "After node -v"
