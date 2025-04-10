@@ -13,6 +13,12 @@ func xcframework(_ package: Dictionary<String, String>.Element) -> Target {
 
 let libOtherFrameworks = frameworks.filter({ $0.key != "KeymanEngine" })
 
+let linkerSettings: [LinkerSetting] = [
+    .linkedFramework("Reachability"),
+    .linkedFramework("Sentry"),
+    .linkedFramework("SentrySwiftUI"),
+    .linkedFramework("ZIPFoundation")
+]
 let package = Package(
     name: "keymanengine-spm",
     products: [
@@ -28,7 +34,8 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "keymanengine-spm",
-            dependencies: frameworks.map { .byName(name: $0.key) }),
+            dependencies: frameworks.map { .byName(name: $0.key) },
+            linkerSettings: linkerSettings),
         .testTarget(
             name: "keymanengine-spmTests",
             dependencies: ["keymanengine-spm"]
