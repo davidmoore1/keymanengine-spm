@@ -21,7 +21,9 @@ let package = Package(
             name: "keymanengine-spm",
             type: .dynamic,
             targets: ["keymanengine-spm", "KeymanEngine"] + libOtherFrameworks.map { $0.key }),
-    ],
+    ] + frameworks.map { framework in
+        .library(name: framework.key, targets: [framework.key])
+    },
     dependencies: [],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
