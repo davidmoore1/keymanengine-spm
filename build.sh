@@ -7,7 +7,7 @@
 set -e
 
 KEYMAN_ENGINE_TAG="v0.1.7"
-KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0"
+KEYMAN_ENGINE_CHECKOUT="origin/stable-17.0-dm"
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
 NODE_VERSION="18.17.0"
 WORK_DIR=".tmp/keyman"
