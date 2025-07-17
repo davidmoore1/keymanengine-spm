@@ -3,8 +3,8 @@
 
 import PackageDescription
 
-let release = "v0.1.8"
-let frameworks = ["DeviceKit": "3563c60149fc228436cc903f5e5dabbe83f05fd563e8e383a2150ef1fcb669e3", "KeymanEngine": "d1740bb54d2c57e3943e99165e98802098721f2fb35f84676d70dd0711887277", "ReachabilitySIL": "54f86e89f43f73afb40304dbc282ae3e4bc2bbccfc28b9b1b9a8509cd4efcd5a", "Sentry": "fc55d94c85dd0e81fb9216b4aced72396f046750790163c7c72eadb837126e09", "SentrySwiftUI": "6d73dd5d84bbf2a38a9dbd1c2519ab1a8bf1b8c62640373bc3a7df8ba95bad9f", "ZIPFoundation": "ab0d2527cc35a96a337851e82769537f8cb6546cccdf0489b6ebfeef87b564e9"]
+let release = "v0.18.1"
+let frameworks = ["DeviceKit": "20db57af9549d9878fc2ebc5a608910864f66706377d1898c85d1fe0c0d4fd1b", "KeymanEngine": "b152ae8d20d8d28b8ef95af15828e1e3609583a91856522ad3ec56f17863d976", "ReachabilitySIL": "d4ae14de744f80c47e0bff6a092374a721d4a2e56eb776a1497bba5cd7ee1d1c", "Sentry": "72b735748cde04adebdfb3fc7b12dcfcf7a3f5d1d2c6e3d3750115f837c8b9dc", "SentrySwiftUI": "853a15adf96ca643d26d0b056d326bc65091d3533cf29202aaea859f46cc149e", "ZIPFoundation": "a0c775db5a85f2e052d20133ec948852025ddc61f34586f2c1143ce64d4d38fd"]
 
 func xcframework(_ package: Dictionary<String, String>.Element) -> Target {
     let url = "https://github.com/davidmoore1/keymanengine-spm/releases/download/\(release)/\(package.key).xcframework.zip"
