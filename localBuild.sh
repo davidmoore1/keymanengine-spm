@@ -6,7 +6,23 @@
 #
 set -e
 
-KEYMAN_ENGINE_TAG="v0.18.4"
+# Flags: --no-release: do everything but skip committing/pushing and GitHub release/upload
+#        --dry-run: produce unsigned zips and checksums but do NOT modify Package.swift or perform any git/gh actions
+NO_RELEASE=0
+DRY_RUN=0
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --no-release)
+      NO_RELEASE=1; shift;;
+    --dry-run)
+      DRY_RUN=1; shift;;
+    --help)
+      echo "Usage: $0 [--no-release] [--dry-run]"; exit 0;;
+    *) echo "Unknown arg: $1"; echo "Usage: $0 [--no-release] [--dry-run]"; exit 2;;
+  esac
+done
+
+KEYMAN_ENGINE_TAG="v0.18.5"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-18.0-dm"
 
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
@@ -38,7 +54,11 @@ cd ../../..
 pwd
 ls
 PACKAGE_STRING=""
-sed -i '' -e "s/let release =.*/let release = \"$KEYMAN_ENGINE_TAG\"/" Package.swift
+if [[ $DRY_RUN -eq 0 ]]; then
+  sed -i '' -e "s/let release =.*/let release = \"$KEYMAN_ENGINE_TAG\"/" Package.swift
+else
+  echo "Dry-run: skipping Package.swift release update"
+fi
 
 XCFRAMEWORK_DIR="$WORK_DIR/ios/build/Build/Products/Debug"
 XCDEST_DIR="$WORK_DIR/ios/build/Build/Products/SPM"
@@ -60,24 +80,25 @@ for path in "$XCDEST_DIR"/*; do
     f=$(basename "$path")
     echo "Adding $f to package list..."
     PACKAGE_NAME=$(basename "$f" .xcframework)
-    # Create a zip of the xcframework inside the XCDEST_DIR so paths and output locations are predictable
-    (cd "$XCDEST_DIR" && ditto -c -k --sequesterRsrc --keepParent "$f" "$PACKAGE_NAME.zip")
+    # Create a zip of the xcframework inside the XCDEST_DIR using the original framework filename so SPM expects <name>.xcframework.zip
+    ZIP_FILENAME="${f}.zip"
+    (cd "$XCDEST_DIR" && ditto -c -k --sequesterRsrc --keepParent "$f" "$ZIP_FILENAME")
 
     # Run the unsign helper from inside the XCDEST_DIR so the unsigned zip is produced there
     if [[ -x "$REPO_ROOT/scripts/unsign_xcframework.sh" ]]; then
-        (cd "$XCDEST_DIR" && "$REPO_ROOT/scripts/unsign_xcframework.sh" "$PACKAGE_NAME.zip")
-        UNSIGNED="$XCDEST_DIR/$PACKAGE_NAME.unsigned.zip"
+        (cd "$XCDEST_DIR" && "$REPO_ROOT/scripts/unsign_xcframework.sh" "$ZIP_FILENAME")
+        UNSIGNED="$XCDEST_DIR/${f}.unsigned.zip"
         if [[ -f "$UNSIGNED" ]]; then
             # Replace the original zip with the unsigned one (keep the same target name)
-            mv -f "$UNSIGNED" "$XCDEST_DIR/$PACKAGE_NAME.zip"
+            mv -f "$UNSIGNED" "$XCDEST_DIR/$ZIP_FILENAME"
         fi
     fi
 
     # Compute checksum of the (now unsigned) zip; prefer shasum on macOS if available
     if command -v shasum >/dev/null 2>&1; then
-        PACKAGE_SUM=$(shasum -a 256 "$XCDEST_DIR/$PACKAGE_NAME.zip" | awk '{print $1}')
+        PACKAGE_SUM=$(shasum -a 256 "$XCDEST_DIR/$ZIP_FILENAME" | awk '{print $1}')
     else
-        PACKAGE_SUM=$(sha256sum "$XCDEST_DIR/$PACKAGE_NAME.zip" | awk '{print $1}')
+        PACKAGE_SUM=$(sha256sum "$XCDEST_DIR/$ZIP_FILENAME" | awk '{print $1}')
     fi
 
     PACKAGE_STRING="$PACKAGE_STRING\"$PACKAGE_NAME\": \"$PACKAGE_SUM\", "
@@ -85,29 +106,38 @@ for path in "$XCDEST_DIR"/*; do
 done
 
 PACKAGE_STRING=$(basename "$PACKAGE_STRING" ", ")
-sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.swift
+if [[ $DRY_RUN -eq 0 ]]; then
+  sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.swift
+else
+  echo "Dry-run: skipping Package.swift frameworks update"
+  echo "Computed package checksums: $PACKAGE_STRING"
+fi
 
-echo "Committing Changes..."
-git add -u
-git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
+if [[ $NO_RELEASE -eq 0 && $DRY_RUN -eq 0 ]]; then
+  echo "Committing Changes..."
+  git add -u
+  git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
 
-echo "Creating Tag..."
-git tag $KEYMAN_ENGINE_TAG
-git push
-git push origin --tags
+  echo "Creating Tag..."
+  git tag $KEYMAN_ENGINE_TAG
+  git push
+  git push origin --tags
 
-echo "Creating Release..."
-gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
+  echo "Creating Release..."
+  gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
 
-echo "Uploading Binaries..."
-for path in "$XCDEST_DIR"/*; do
-    [ -e "$path" ] || continue
-    f=$(basename "$path")
-    if [[ $f == *.zip ]]; then
-        gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
-    fi
-done
+  echo "Uploading Binaries..."
+  for path in "$XCDEST_DIR"/*; do
+      [ -e "$path" ] || continue
+      f=$(basename "$path")
+      if [[ $f == *.zip ]]; then
+          gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
+      fi
+  done
 
-gh release edit $KEYMAN_ENGINE_TAG --draft=false
+  gh release edit $KEYMAN_ENGINE_TAG --draft=false
+else
+  echo "Skipping git/gh release/upload steps (NO_RELEASE=$NO_RELEASE, DRY_RUN=$DRY_RUN)"
+fi
 
 echo "All done!"

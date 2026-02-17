@@ -6,6 +6,22 @@
 #
 set -e
 
+# Flags: --no-release: do everything but skip committing/pushing and GitHub release/upload
+#        --dry-run: produce unsigned zips and checksums but do NOT modify Package.swift or perform any git/gh actions
+NO_RELEASE=0
+DRY_RUN=0
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --no-release)
+      NO_RELEASE=1; shift;;
+    --dry-run)
+      DRY_RUN=1; shift;;
+    --help)
+      echo "Usage: $0 [--no-release] [--dry-run]"; exit 0;;
+    *) echo "Unknown arg: $1"; echo "Usage: $0 [--no-release] [--dry-run]"; exit 2;;
+  esac
+done
+
 KEYMAN_ENGINE_TAG="v0.18.1"
 KEYMAN_ENGINE_CHECKOUT="origin/stable-18.0-dm"
 KEYMAN_ENGINE_REPO="https://github.com/davidmoore1/keyman"
@@ -56,7 +72,11 @@ cd ../../..
 pwd
 ls
 PACKAGE_STRING=""
-sed -i '' -e "s/let release =.*/let release = \"$KEYMAN_ENGINE_TAG\"/" Package.swift
+if [[ $DRY_RUN -eq 0 ]]; then
+  sed -i '' -e "s/let release =.*/let release = \"$KEYMAN_ENGINE_TAG\"/" Package.swift
+else
+  echo "Dry-run: skipping Package.swift release update"
+fi
 
 XCFRAMEWORK_DIR="$WORK_DIR/ios/build/Build/Products/Debug"
 XCDEST_DIR="$WORK_DIR/ios/build/Build/Products/SPM"
@@ -80,58 +100,68 @@ for path in "$XCDEST_DIR"/*; do
     echo "Adding $f to package list..."
     PACAKGE="$XCDEST_DIR/$f"
     # Create zip using ditto; ensure arguments are quoted
-    ditto -c -k --sequesterRsrc --keepParent "$PACAKGE" "$PACAKGE.zip"
+    ZIP_FILENAME="${f}.zip"
+    ditto -c -k --sequesterRsrc --keepParent "$PACAKGE" "$XCDEST_DIR/$ZIP_FILENAME"
     PACKAGE_NAME=$(basename "$f" .xcframework)
 
     # Run unsign helper to remove embedded code signatures from the zipped xcframework
     if [[ -x "$REPO_ROOT/scripts/unsign_xcframework.sh" ]]; then
-        (cd "$XCDEST_DIR" && "$REPO_ROOT/scripts/unsign_xcframework.sh" "$PACKAGE_NAME.zip")
-        UNSIGNED="$XCDEST_DIR/$PACKAGE_NAME.unsigned.zip"
+        (cd "$XCDEST_DIR" && "$REPO_ROOT/scripts/unsign_xcframework.sh" "$ZIP_FILENAME")
+        UNSIGNED="$XCDEST_DIR/${f}.unsigned.zip"
         if [[ -f "$UNSIGNED" ]]; then
-            mv -f "$UNSIGNED" "$XCDEST_DIR/$PACKAGE_NAME.zip"
+            mv -f "$UNSIGNED" "$XCDEST_DIR/$ZIP_FILENAME"
         fi
     fi
 
     # Compute checksum using shasum on macOS if available
     if command -v shasum >/dev/null 2>&1; then
-        PACKAGE_SUM=$(shasum -a 256 "$XCDEST_DIR/$PACKAGE_NAME.zip" | awk '{ print $1 }')
+        PACKAGE_SUM=$(shasum -a 256 "$XCDEST_DIR/$ZIP_FILENAME" | awk '{ print $1 }')
     else
-        PACKAGE_SUM=$(sha256sum "$XCDEST_DIR/$PACKAGE_NAME.zip" | awk '{ print $1 }')
+        PACKAGE_SUM=$(sha256sum "$XCDEST_DIR/$ZIP_FILENAME" | awk '{ print $1 }')
     fi
     PACKAGE_STRING="$PACKAGE_STRING\"$PACKAGE_NAME\": \"$PACKAGE_SUM\", "
 
 done
 
 PACKAGE_STRING=$(basename "$PACKAGE_STRING" ", ")
-sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.swift
+if [[ $DRY_RUN -eq 0 ]]; then
+  sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.swift
+else
+  echo "Dry-run: skipping Package.swift frameworks update"
+  echo "Computed package checksums: $PACKAGE_STRING"
+fi
 
-echo "Configuring Git..."
-git config --global user.email "github-actions[bot]@users.noreply.github.com"
-git config --global user.name "github-actions[bot]"
-# Quote GH_TOKEN to avoid word-splitting
-git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/davidmoore1/keymanengine-spm.git"
+if [[ $NO_RELEASE -eq 0 && $DRY_RUN -eq 0 ]]; then
+  echo "Configuring Git..."
+  git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  git config --global user.name "github-actions[bot]"
+  # Quote GH_TOKEN to avoid word-splitting
+  git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/davidmoore1/keymanengine-spm.git"
 
-echo "Committing Changes..."
-git add -u
-git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
+  echo "Committing Changes..."
+  git add -u
+  git commit -m "Creating release for $KEYMAN_ENGINE_TAG"
 
-echo "Creating Tag..."
-git tag $KEYMAN_ENGINE_TAG
-git push origin main  # Ensure you're pushing to the correct branch
-git push origin --tags
+  echo "Creating Tag..."
+  git tag $KEYMAN_ENGINE_TAG
+  git push origin main  # Ensure you're pushing to the correct branch
+  git push origin --tags
 
-echo "Creating Release..."
-gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
+  echo "Creating Release..."
+  gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
 
-echo "Uploading Binaries..."
-for path in "$XCDEST_DIR"/*; do
-    [ -e "$path" ] || continue
-    f=$(basename "$path")
-    if [[ $f == *.zip ]]; then
-        gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
-    fi
-done
+  echo "Uploading Binaries..."
+  for path in "$XCDEST_DIR"/*; do
+      [ -e "$path" ] || continue
+      f=$(basename "$path")
+      if [[ $f == *.zip ]]; then
+          gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
+      fi
+  done
 
-gh release edit $KEYMAN_ENGINE_TAG --draft=false
+  gh release edit $KEYMAN_ENGINE_TAG --draft=false
+else
+  echo "Skipping git/gh release/upload steps (NO_RELEASE=$NO_RELEASE, DRY_RUN=$DRY_RUN)"
+fi
 
 echo "All done!"
