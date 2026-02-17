@@ -64,20 +64,42 @@ XCCARTHAGE_DIR="$WORK_DIR/ios/Carthage/Build"
 
 echo "Copying Frameworks to SPM Directory..."
 mkdir -p "$XCDEST_DIR"
-rm -rf "$XCDEST_DIR"/*
-cp -R "$XCCARTHAGE_DIR"/*.xcframework "$XCDEST_DIR"
-cp -R "$XCFRAMEWORK_DIR"/KeymanEngine.xcframework "$XCDEST_DIR"
+rm -rf "${XCDEST_DIR:?}"/*
+cp -R "$XCCARTHAGE_DIR"/*.xcframework "$XCDEST_DIR" || true
+cp -R "$XCFRAMEWORK_DIR"/KeymanEngine.xcframework "$XCDEST_DIR" || true
 
-rm -rf $XCDEST_DIR/*.zip
+rm -rf "$XCDEST_DIR"/*.zip
 
-for f in $(ls "$XCDEST_DIR")
-do
+# Remember repository root so we can call the helper script from inside the dest dir
+REPO_ROOT=$(pwd)
+
+# Iterate safely over entries in the XCDEST_DIR
+for path in "$XCDEST_DIR"/*; do
+    [ -e "$path" ] || continue
+    f=$(basename "$path")
     echo "Adding $f to package list..."
     PACAKGE="$XCDEST_DIR/$f"
-    ditto -c -k --sequesterRsrc --keepParent $PACAKGE "$PACAKGE.zip"
+    # Create zip using ditto; ensure arguments are quoted
+    ditto -c -k --sequesterRsrc --keepParent "$PACAKGE" "$PACAKGE.zip"
     PACKAGE_NAME=$(basename "$f" .xcframework)
-    PACKAGE_SUM=$(sha256sum "$PACAKGE.zip" | awk '{ print $1 }')
+
+    # Run unsign helper to remove embedded code signatures from the zipped xcframework
+    if [[ -x "$REPO_ROOT/scripts/unsign_xcframework.sh" ]]; then
+        (cd "$XCDEST_DIR" && "$REPO_ROOT/scripts/unsign_xcframework.sh" "$PACKAGE_NAME.zip")
+        UNSIGNED="$XCDEST_DIR/$PACKAGE_NAME.unsigned.zip"
+        if [[ -f "$UNSIGNED" ]]; then
+            mv -f "$UNSIGNED" "$XCDEST_DIR/$PACKAGE_NAME.zip"
+        fi
+    fi
+
+    # Compute checksum using shasum on macOS if available
+    if command -v shasum >/dev/null 2>&1; then
+        PACKAGE_SUM=$(shasum -a 256 "$XCDEST_DIR/$PACKAGE_NAME.zip" | awk '{ print $1 }')
+    else
+        PACKAGE_SUM=$(sha256sum "$XCDEST_DIR/$PACKAGE_NAME.zip" | awk '{ print $1 }')
+    fi
     PACKAGE_STRING="$PACKAGE_STRING\"$PACKAGE_NAME\": \"$PACKAGE_SUM\", "
+
 done
 
 PACKAGE_STRING=$(basename "$PACKAGE_STRING" ", ")
@@ -86,7 +108,8 @@ sed -i '' -e "s/let frameworks =.*/let frameworks = [$PACKAGE_STRING]/" Package.
 echo "Configuring Git..."
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 git config --global user.name "github-actions[bot]"
-git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/davidmoore1/keymanengine-spm.git
+# Quote GH_TOKEN to avoid word-splitting
+git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/davidmoore1/keymanengine-spm.git"
 
 echo "Committing Changes..."
 git add -u
@@ -101,8 +124,9 @@ echo "Creating Release..."
 gh release create -p -d $KEYMAN_ENGINE_TAG --title "KeymanEngine SPM $KEYMAN_ENGINE_TAG" --generate-notes --verify-tag
 
 echo "Uploading Binaries..."
-for f in $(ls "$XCDEST_DIR")
-do
+for path in "$XCDEST_DIR"/*; do
+    [ -e "$path" ] || continue
+    f=$(basename "$path")
     if [[ $f == *.zip ]]; then
         gh release upload $KEYMAN_ENGINE_TAG "$XCDEST_DIR/$f"
     fi
@@ -111,4 +135,3 @@ done
 gh release edit $KEYMAN_ENGINE_TAG --draft=false
 
 echo "All done!"
-
