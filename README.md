@@ -31,6 +31,7 @@ other than the last digit of the version number are required (such as for a majo
 References to the version of node.js that are required by the keyman build are in the build.sh file in NODE_VERSION.
 
 If you would like to build your own xcframework binaries run the `localbuild.sh` script on a macOS machine. 
-Edit the KEYMAN_ENGINE_TAG in the build.sh script.  It will perform the build and update the Package.swift file with the new version number.
+Edit the KEYMAN_ENGINE_TAG in the localbuild.sh script.  It will perform the build and update the Package.swift file with the new version number.
+
 The KEYMAN_ENGINE_REPO variable in the build.sh and localbuild.sh script is the URL to the Keyman Engine repo being built.
 The KEYMAN_ENGINE_CHECKOUT variable in the build.sh and the localbuild.sh script is the branch or tag being checked out.
